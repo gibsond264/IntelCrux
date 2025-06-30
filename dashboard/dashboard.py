@@ -1,9 +1,7 @@
 from flask import Flask, render_template_string
 import os
-from logger import setup_logger
 
-app = Flask(__name__)
-log = setup_logger()
+app = Flask(__name__)  # ✅ this must be named `app`
 
 @app.route("/")
 def home():
@@ -26,5 +24,7 @@ def home():
 
     return render_template_string(html_template, log_content="".join(lines))
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+# ❌ DO NOT include this:
+# if __name__ == "__main__":
+#     app.run(host="0.0.0.0", port=...)
+
