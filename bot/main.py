@@ -22,10 +22,10 @@ def job_liveuamap():
                 if len(final_post) <= 280:
                     post_tweet(final_post)
 
-schedule.every(15).minutes.do(job_twitter)
-schedule.every(15).minutes.do(job_liveuamap)
+schedule.every(2).minutes.do(job_twitter)
+schedule.every(2).minutes.do(job_liveuamap)
 
-log.info("✅ IntelCrux OSINT bot running every 15 minutes.")
+log.info("✅ IntelCrux OSINT bot running every 2 minutes.")
 while True:
     schedule.run_pending()
     time.sleep(1)
