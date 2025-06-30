@@ -17,17 +17,14 @@ jobs:
       with:
         node-version: 18
 
-    - name: Install new Railway CLI
-      run: npm install -g @railway/cli
-
     - name: Deploy Bot Service
       run: |
         cd bot
-        railway login --token ${{ secrets.RAILWAY_TOKEN }}
-        railway up --service intelcrux-bot
+        npx @railway/cli login --token ${{ secrets.RAILWAY_TOKEN }}
+        npx @railway/cli up --service intelcrux-bot
 
     - name: Deploy Dashboard Service
       run: |
-        cd ../dashboard
-        railway login --token ${{ secrets.RAILWAY_TOKEN }}
-        railway up --service intelcrux-dashboard
+        cd dashboard
+        npx @railway/cli login --token ${{ secrets.RAILWAY_TOKEN }}
+        npx @railway/cli up --service intelcrux-dashboard
