@@ -7,18 +7,27 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Deploy to Railway (Bot)
-        uses: railwayapp/cli-action@v1
-        with:
-          railwayToken: ${{ secrets.RAILWAY_TOKEN }}
-          command: railway up --service="intelcrux-bot" --root="bot"
+    - name: Set up Node (Railway CLI depends on it)
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
 
-      - name: Deploy to Railway (Dashboard)
-        uses: railwayapp/cli-action@v1
-        with:
-          railwayToken: ${{ secrets.RAILWAY_TOKEN }}
-          command: railway up --service="intelcrux-dashboard" --root="dashboard"
+    - name: Install Railway CLI
+      run: npm install -g railway
+
+    - name: Deploy bot/
+      run: |
+        cd bot
+        railway login --token ${{ secrets.RAILWAY_TOKEN }}
+        railway up --service intelcrux-bot
+
+    - name: Deploy dashboard/
+      run: |
+        cd ../dashboard
+        railway login --token ${{ secrets.RAILWAY_TOKEN }}
+        railway up --service intelcrux-dashboard
