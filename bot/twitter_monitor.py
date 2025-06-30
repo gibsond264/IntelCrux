@@ -17,7 +17,10 @@ auth = tweepy.OAuth1UserHandler(
 )
 api = tweepy.API(auth)
 
-POSTED_IDS_FILE = "posted_ids.txt"
+# Get absolute paths based on current script location
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+POSTED_IDS_FILE = os.path.join(BASE_DIR, "posted_ids.txt")
+FOLLOWERS_CSV = os.path.join(BASE_DIR, "followers.csv")
 
 def load_posted_ids():
     if not os.path.exists(POSTED_IDS_FILE):
@@ -43,7 +46,7 @@ def is_relevant(text):
     keywords = [
         "missile", "airstrike", "strike", "IDF", "mobilization", "air raid",
         "explosion", "rocket", "drone", "nuclear", "counteroffensive", "invasion",
-        "warplane", "ballistic", "intercept", "mobilized", "military", "border"
+        "warplane", "ballistic", "intercept", "mobilized", "military", "border", "explosions"
     ]
     return any(kw.lower() in text.lower() for kw in keywords)
 
@@ -55,7 +58,7 @@ def post_tweet(text):
         log.error(f"❌ Error posting: {e}")
 
 def get_latest_tweets():
-    usernames = load_usernames_from_csv("followers.csv")
+    usernames = load_usernames_from_csv(FOLLOWERS_CSV)
     posted_ids = load_posted_ids()
 
     for username in usernames:
