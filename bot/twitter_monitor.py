@@ -60,6 +60,7 @@ def post_tweet(text):
 
 def get_latest_tweets():
     usernames = load_usernames_from_csv(FOLLOWERS_CSV)
+    log.info(f"📋 Loaded usernames: {usernames}")
     posted_ids = load_posted_ids()
     time_threshold = datetime.now(timezone.utc) - timedelta(minutes=15)
 
