@@ -1,15 +1,17 @@
 import os
+import time
 import tweepy
 from dotenv import load_dotenv
 from summarize import summarize_text
 from logger import setup_logger
 from datetime import datetime, timezone, timedelta
+from liveuamap_scraper import scrape_liveuamap
 
 log = setup_logger()
 
 load_dotenv()
 
-# v1.1 API (used for posting)
+# v1.1 API (for posting)
 auth = tweepy.OAuth1UserHandler(
     os.getenv("TWITTER_API_KEY"),
     os.getenv("TWITTER_API_SECRET"),
@@ -18,7 +20,7 @@ auth = tweepy.OAuth1UserHandler(
 )
 api = tweepy.API(auth)
 
-# v2 API (used for reading/searching tweets)
+# v2 API (for reading/searching)
 client = tweepy.Client(bearer_token=os.getenv("TWITTER_BEARER_TOKEN"))
 
 # Paths
@@ -66,7 +68,11 @@ def get_latest_tweets():
     posted_ids = load_posted_ids()
     time_threshold = datetime.now(timezone.utc) - timedelta(minutes=15)
 
-    for username in usernames:
+    for i, username in enumerate(usernames):
+        if i >= 40:
+            log.info("⚠️ Limit reached: skipping remaining usernames to stay under Twitter API rate limits.")
+            break
+
         try:
             query = f"from:{username} -is:retweet"
             tweets = client.search_recent_tweets(
@@ -98,5 +104,19 @@ def get_latest_tweets():
                         save_posted_id(tweet.id)
                 else:
                     log.info(f"🟡 Ignored (not relevant): @{username}: {tweet.text[:80]}...")
+
+            time.sleep(1.5)
+
         except Exception as e:
             log.error(f"❌ Error fetching @{username} via v2 API: {e}")
+            time.sleep(2)
+
+def check_liveuamap_scraper():
+    log.info("🔎 Checking Liveuamap scraper...")
+    for region in ["ukraine", "israel"]:
+        headlines = scrape_liveuamap(region)
+        if not headlines:
+            log.warning(f"⚠️ No headlines scraped from Liveuamap for region: {region}")
+        else:
+            log.info(f"✅ {len(headlines)} headlines scraped from Liveuamap for {region}")
+
