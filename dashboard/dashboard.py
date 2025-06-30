@@ -1,16 +1,19 @@
 from flask import Flask, render_template_string
 import os
 
-app = Flask(__name__)  # ✅ this must be named `app`
+app = Flask(__name__)
 
 @app.route("/")
 def home():
     log_path = "bot.log"
     if not os.path.exists(log_path):
-        return "Log file not found."
+        return "No log file yet. Bot may not have written logs."
 
-    with open(log_path, "r", encoding="utf-8") as f:
-        lines = f.readlines()[-50:]
+    try:
+        with open(log_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()[-50:]
+    except Exception as e:
+        return f"Error reading log: {e}"
 
     html_template = """
     <html>
@@ -23,8 +26,3 @@ def home():
     """
 
     return render_template_string(html_template, log_content="".join(lines))
-
-# ❌ DO NOT include this:
-# if __name__ == "__main__":
-#     app.run(host="0.0.0.0", port=...)
-
