@@ -1,0 +1,24 @@
+name: Deploy IntelCrux to Railway
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to Railway (Bot)
+        uses: railwayapp/cli-action@v1
+        with:
+          railwayToken: ${{ secrets.RAILWAY_TOKEN }}
+          command: railway up --service="intelcrux-bot" --root="bot"
+
+      - name: Deploy to Railway (Dashboard)
+        uses: railwayapp/cli-action@v1
+        with:
+          railwayToken: ${{ secrets.RAILWAY_TOKEN }}
+          command: railway up --service="intelcrux-dashboard" --root="dashboard"
