@@ -1,6 +1,5 @@
 import os
 import tweepy
-import csv
 from dotenv import load_dotenv
 from summarize import summarize_text
 from logger import setup_logger
@@ -21,7 +20,7 @@ api = tweepy.API(auth)
 # Paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 POSTED_IDS_FILE = os.path.join(BASE_DIR, "posted_ids.txt")
-FOLLOWERS_CSV = os.path.join(BASE_DIR, "followers.csv")
+USERNAMES_TXT = os.path.join(BASE_DIR, "usernames.txt")
 
 def load_posted_ids():
     if not os.path.exists(POSTED_IDS_FILE):
@@ -33,14 +32,13 @@ def save_posted_id(tweet_id):
     with open(POSTED_IDS_FILE, "a") as f:
         f.write(f"{tweet_id}\n")
 
-def load_usernames_from_csv(filepath):
+def load_usernames_from_txt(filepath):
     usernames = []
-    with open(filepath, newline='', encoding='utf-8') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            username = row.get("username") or row.get("Username") or row.get("handle")
+    with open(filepath, "r", encoding="utf-8") as f:
+        for line in f:
+            username = line.strip().lstrip("@")
             if username:
-                usernames.append(username.strip().lstrip("@"))
+                usernames.append(username)
     return usernames
 
 def is_relevant(text):
@@ -59,7 +57,7 @@ def post_tweet(text):
         log.error(f"❌ Error posting: {e}")
 
 def get_latest_tweets():
-    usernames = load_usernames_from_csv(FOLLOWERS_CSV)
+    usernames = load_usernames_from_txt(USERNAMES_TXT)
     log.info(f"📋 Loaded usernames: {usernames}")
     posted_ids = load_posted_ids()
     time_threshold = datetime.now(timezone.utc) - timedelta(minutes=15)
