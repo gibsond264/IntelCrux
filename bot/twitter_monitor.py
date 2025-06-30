@@ -9,6 +9,7 @@ log = setup_logger()
 
 load_dotenv()
 
+# v1.1 API (used for posting)
 auth = tweepy.OAuth1UserHandler(
     os.getenv("TWITTER_API_KEY"),
     os.getenv("TWITTER_API_SECRET"),
@@ -16,6 +17,9 @@ auth = tweepy.OAuth1UserHandler(
     os.getenv("TWITTER_ACCESS_SECRET")
 )
 api = tweepy.API(auth)
+
+# v2 API (used for reading/searching tweets)
+client = tweepy.Client(bearer_token=os.getenv("TWITTER_BEARER_TOKEN"))
 
 # Paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -64,10 +68,17 @@ def get_latest_tweets():
 
     for username in usernames:
         try:
-            tweets = api.user_timeline(screen_name=username, count=5, tweet_mode="extended")
-            log.info(f"📥 Fetched {len(tweets)} tweets from @{username}")
+            query = f"from:{username} -is:retweet"
+            tweets = client.search_recent_tweets(
+                query=query,
+                tweet_fields=["created_at", "text", "id"],
+                max_results=5
+            )
 
-            for tweet in tweets:
+            results = tweets.data or []
+            log.info(f"📥 Fetched {len(results)} tweets from @{username}")
+
+            for tweet in results:
                 if tweet.created_at < time_threshold:
                     log.info(f"⏰ Skipped old tweet from @{username} (created at {tweet.created_at})")
                     continue
@@ -76,9 +87,9 @@ def get_latest_tweets():
                     log.info(f"⏩ Skipped duplicate tweet ID {tweet.id} from @{username}")
                     continue
 
-                if is_relevant(tweet.full_text):
-                    log.info(f"[RELEVANT] @{username}: {tweet.full_text[:100]}...")
-                    summary = summarize_text(tweet.full_text)
+                if is_relevant(tweet.text):
+                    log.info(f"[RELEVANT] @{username}: {tweet.text[:100]}...")
+                    summary = summarize_text(tweet.text)
                     if summary:
                         final_post = f"⚡️ {summary}\n(Source: @{username})"
                         if len(final_post) > 280:
@@ -86,6 +97,6 @@ def get_latest_tweets():
                         post_tweet(final_post)
                         save_posted_id(tweet.id)
                 else:
-                    log.info(f"🟡 Ignored (not relevant): @{username}: {tweet.full_text[:80]}...")
+                    log.info(f"🟡 Ignored (not relevant): @{username}: {tweet.text[:80]}...")
         except Exception as e:
-            log.error(f"❌ Error fetching @{username}: {e}")
+            log.error(f"❌ Error fetching @{username} via v2 API: {e}")
