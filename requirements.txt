@@ -1,4 +1,3 @@
-tweepy>=4.10.1
 openai
 python-dotenv
 schedule
@@ -6,12 +5,13 @@ requests
 beautifulsoup4
 python-dateutil
 telethon
-telethon
 python-telegram-bot
-python-dotenv
 transformers
-sentencepiece            # required by MarianMT
-torch                   # for the model (CPU or GPU)
+sentencepiece            
+torch                   
+feedparser>=6.0.0
+
+
 
 
 
