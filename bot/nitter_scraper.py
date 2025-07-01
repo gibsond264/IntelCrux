@@ -1,8 +1,7 @@
 import os
+import time
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
-import time
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 USERNAMES_TXT = os.path.join(BASE_DIR, "usernames.txt")
@@ -16,37 +15,46 @@ def load_usernames_from_txt(filepath):
                 usernames.append(username)
     return usernames
 
-def scrape_nitter(username, max_tweets=5, base_url="https://nitter.poast.org"):
-    url = f"{base_url}/{username}"
-    headers = {
-        "User-Agent": "Mozilla/5.0"
-    }
+def scrape_nitter(username, max_tweets=5):
+    mirrors = [
+        "https://nitter.privacydev.net",
+        "https://nitter.lacontrevoie.fr",
+        "https://nitter.poast.org",
+        "https://nitter.net"
+    ]
+    headers = {"User-Agent": "Mozilla/5.0"}
 
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        if response.status_code != 200:
-            print(f"⚠️ Failed to fetch {url}: Status {response.status_code}")
-            return []
+    for base_url in mirrors:
+        url = f"{base_url}/{username}"
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            if response.status_code != 200:
+                print(f"⚠️ Mirror {base_url} failed for @{username}: Status {response.status_code}")
+                continue
 
-        soup = BeautifulSoup(response.text, "html.parser")
-        tweets = []
+            soup = BeautifulSoup(response.text, "html.parser")
+            tweets = []
 
-        for tweet in soup.select("div.timeline-item")[:max_tweets]:
-            text_tag = tweet.select_one("div.tweet-content")
-            date_tag = tweet.select_one("span.tweet-date > a")
-            timestamp = date_tag["title"] if date_tag else None
-            if text_tag and timestamp:
-                tweets.append({
-                    "username": username,
-                    "text": text_tag.get_text(strip=True),
-                    "timestamp": timestamp
-                })
+            for tweet in soup.select("div.timeline-item")[:max_tweets]:
+                text_tag = tweet.select_one("div.tweet-content")
+                date_tag = tweet.select_one("span.tweet-date > a")
+                timestamp = date_tag["title"] if date_tag else None
+                if text_tag and timestamp:
+                    tweets.append({
+                        "username": username,
+                        "text": text_tag.get_text(strip=True),
+                        "timestamp": timestamp
+                    })
 
-        return tweets
+            print(f"✅ Scraped @{username} from {base_url}")
+            return tweets
 
-    except Exception as e:
-        print(f"❌ Error scraping @{username}: {e}")
-        return []
+        except Exception as e:
+            print(f"❌ Error scraping @{username} via {base_url}: {e}")
+            time.sleep(1)  # pause before trying next mirror
+
+    print(f"❌ All Nitter mirrors failed for @{username}")
+    return []
 
 def scrape_all_nitter_users():
     usernames = load_usernames_from_txt(USERNAMES_TXT)
@@ -57,11 +65,11 @@ def scrape_all_nitter_users():
         print(f"🔎 Scraping @{username} via Nitter...")
         tweets = scrape_nitter(username)
         all_tweets.extend(tweets)
-        time.sleep(1.5)  # throttle requests to avoid getting blocked
+        time.sleep(1.5)  # throttle between users
 
     return all_tweets
 
-# Optional: test
+# Optional: test run
 if __name__ == "__main__":
     tweets = scrape_all_nitter_users()
     for tweet in tweets:
