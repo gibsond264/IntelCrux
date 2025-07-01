@@ -16,7 +16,7 @@ def load_usernames_from_txt(filepath):
                 usernames.append(username)
     return usernames
 
-def scrape_nitter(username, max_tweets=5, base_url="https://nitter.net"):
+def scrape_nitter(username, max_tweets=5, base_url="https://nitter.poast.org"):
     url = f"{base_url}/{username}"
     headers = {
         "User-Agent": "Mozilla/5.0"
